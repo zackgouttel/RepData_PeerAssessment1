@@ -1,0 +1,129 @@
+---
+title: "PA_Template1"
+author: "Zack Gouttel"
+date: "15/06/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+```
+
+# Assignment Report
+
+This is an R Markdown made docment for the Assignment report of Reproducible Research's 1st Course Project
+
+# 1.Reading the data into R
+ I used read.csv:
+```{r}
+activity <- read.csv("~/GitHub/RR_CP1/repdata_data_activity/activity.csv")
+```
+
+
+# 2.a Calculating the total number of steps per day and plotting it
+
+Did this through the aggregate function
+```{r}
+sum_steps<- aggregate(activity[, 1], list(activity$date), sum, na.rm=TRUE)
+```
+
+
+
+
+```{r steps, echo=FALSE}
+ hist(sum_steps[,2], main="Total Step Count Histogram")
+```
+
+# 2.b Mean and Median
+
+The mean and median are as follows in the summary function
+
+```{r}
+ summary(sum_steps[,2])
+```
+
+
+# 3. Average Daily Activity Pattern
+ This was done in two steps
+ 
+## First one
+ 
+ Calculating the average daily pattern for each 5 minute interval each day through the aggregate function
+ 
+```{r,echo=FALSE}
+   mean_steps<-aggregate(activity[,1], list(activity$date,activity$interval),
+                          mean,
+                      na.rm=TRUE)
+```
+
+## Second One
+
+ Plotting
+```{r Daily Pattern, echo=FALSE}
+ plot(x = mean_steps[,2],y=mean_steps[,3],xlab="interval",
+     ylab="Average step count", main = "Average daily pattern",type = "l")
+    abline(h=max(mean_steps[,3],na.rm = TRUE))   
+```
+ 
+ 
+ Viewing the Summary of the average daily pattern returns that the max value is 806, equivalent to the interval 615
+ 
+```{r}
+ summary(mean_steps[,3])
+```
+# 4.Imputing NAs:
+
+  We used a simple manner to do so by replacing the 2304 NAs by the mean of activity$steps, then we created a new NA clean Dataframe called dfnna
+  
+```{r,echo=FALSE}
+ summary(activity)                                                                #it returns that activity contains 2304 missing value
+                                                                         
+     dfnna<-activity                                                                 #here i chose to replace the NAs in the whole dataset
+                                                                  
+     dfnna[is.na(activity)]<-mean(activity$steps,na.rm = TRUE)                       #by the mean of activity$steps
+     
+```
+  
+## 4.1 Plotting the new total average number of steps per day and gathering the new mean and median
+  This was done in the same manner as the original dataset
+  
+```{r,echo=FALSE}
+ sum_steps_nna<- aggregate(dfnna[, 1], list(dfnna[,2]), sum)                      
+     
+```  
+  
+  then the plot: 
+  
+```{r Steps_no_na, echo=FALSE}
+hist(sum_steps_nna[,2], main="Total Step Count Histogram -NO NAs-")   
+```  
+  
+  The SUMMARY reports that the median and the mean are now equal 
+
+```{r}
+ summary(sum_steps_nna[,2])
+```
+
+# 5. Difference in Average Daily Pattern between Weekdays and Weekends
+
+ creating a new factor for weekend and weekday through the weekdays function
+ 
+```{r}
+ r<-weekdays(as.Date(dfnna$date))  
+we<-ifelse(r %in% c("samedi", "dimanche"), "weekend", "weekday") 
+dfnna$weekend_weekday<-we 
+mean_steps_nna<-aggregate(dfnna[,1], list(dfnna$weekend_weekday,dfnna$interval),
+                         mean,
+                         na.rm=TRUE)
+
+```
+  Plotting the Panel Plot:
+  
+```{r Panel_plot, echo=FALSE}
+ qplot(mean_steps_nna[,2],mean_steps_nna[,3],data=mean_steps_nna,facets = .~Group.1, geom="smooth")    
+```    
+
+We can observe that average daily pattern is relatively higher in weekends than weekdays, which is interesting
+
+# This Concludes my Report for the Course Project.
